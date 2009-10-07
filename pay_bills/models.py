@@ -61,7 +61,7 @@ class Transfer(Model):
             if p == self.payer:
                 row.append('%.2f' % self.amount)
             elif p == self.payee:
-                row.append('-%.2f' % self.amount)
+                row.append('%.2f' % -self.amount)
             else:
                 row.append('')
         return [row]
@@ -112,7 +112,7 @@ class Bill(Model):
               self.comment or str(self)]
         for p in people:
             if self.debt_for(p):
-                r1.append('-%.2f' % self.debt_for(p).amount)
+                r1.append('%.2f' % -self.debt_for(p).amount)
             else:
                 r1.append('')
 
