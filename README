@@ -1,0 +1,48 @@
+Bill Anarchy (is Order) is a Python/Django web-app for housemates to
+use to split the bills.
+
+It is like billmonk.com but free/open source software, under the AGPL
+license.
+
+To keep things light, we will use Sqlite for the database.
+
+
+
+INSTALLATION
+============
+
+Setup
+-----
+
+(in ubuntu/debian)
+sudo apt-get install python-django python-setuptools
+sudo easy_install django xlwt
+
+Testing
+-------
+
+python manage.py test # run tests
+python manage.py runserver # run server locally
+
+
+
+LICENSE
+=======
+
+http://www.fsf.org/licensing/licenses/agpl-3.0.html
+
+    <one line to give the program's name and a brief idea of what it does.>
+    Copyright (C) <year>  <name of author>
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Affero General Public License as
+    published by the Free Software Foundation, either version 3 of the
+    License, or (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Affero General Public License for more details.
+
+    You should have received a copy of the GNU Affero General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
