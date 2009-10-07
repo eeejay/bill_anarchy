@@ -50,9 +50,10 @@ def create_account(request):
 class TransferForm(forms.Form):
     comment = forms.CharField(required=False)
     amount = forms.FloatField()
-    def __init__(self, group, *args, **kwargs):
+    def __init__(self, current_user, group, *args, **kwargs):
         super(TransferForm, self).__init__(*args, **kwargs)
-        self.fields['payer'] = forms.ModelChoiceField(queryset=group.user_set.all())
+        self.fields['payer'] = forms.ModelChoiceField(queryset=group.user_set.all(),
+                                                      initial=current_user.id)
         self.fields['payee'] = forms.ModelChoiceField(queryset=group.user_set.all())
 
 @login_required
@@ -62,9 +63,9 @@ def add_transfer(request, group):
         return HttpResponseRedirect('/login/?next=%s' % request.path)
 
     if request.method == 'GET': # no form data is associated with page, yet
-        form = TransferForm(group)
+        form = TransferForm(request.user, group)
     elif request.method == 'POST': # If the form has been submitted...
-        form = TransferForm(group, request.POST) # A form bound to the POST data
+        form = TransferForm(request.user, group, request.POST) # A form bound to the POST data
         if form.is_valid():
             # All validation rules pass, so create new data based on the
             # form contents 
@@ -77,12 +78,13 @@ class BillForm(forms.Form):
     amount = forms.FloatField(widget=forms.TextInput(
             attrs={'onKeyUp': mark_safe("split_bill()")}))
 
-    def __init__(self, group, *args, **kwargs):
+    def __init__(self, current_user, group, *args, **kwargs):
         super(BillForm, self).__init__(*args, **kwargs)
         # now we add each question individually
         self.debtors = group.user_set.all()
 
-        self.fields['payer'] = forms.ModelChoiceField(queryset=self.debtors)
+        self.fields['payer'] = forms.ModelChoiceField(queryset=self.debtors,
+                                                      initial=current_user.id)
 
         self.debtor_fields = []
         for d in self.debtors:
@@ -90,16 +92,12 @@ class BillForm(forms.Form):
             self.debtor_fields.append(self['debtor_%d' % d.id])
         self.num_debtors = len(self.debtors)
         
-    def is_valid(self):
-        if not super(BillForm, self).is_valid():
-            return False
-        else:
-            total_debts = sum([self.cleaned_data['debtor_%d'%d.id] for d in self.debtors])
-            if self.cleaned_data['amount'] != total_debts:
-                self.errors['amount'] = 'Sum of debts must equal amount'
-                return False
-            else:
-                return True
+    def clean(self):
+        total_debts = sum([self.cleaned_data.get('debtor_%d'%d.id, 0.) for d in self.debtors])
+        if self.cleaned_data.get('amount') != total_debts:
+            raise forms.ValidationError('Sum of debts must equal total bill amount')
+
+        return self.cleaned_data
 
 @login_required
 def add_bill(request, group):
@@ -108,9 +106,9 @@ def add_bill(request, group):
         return HttpResponseRedirect('/login/?next=%s' % request.path)
 
     if request.method == 'GET': # no form data is associated with page, yet
-        form = BillForm(group)
+        form = BillForm(request.user, group)
     elif request.method == 'POST': # If the form has been submitted...
-        form = BillForm(group, request.POST) # A form bound to the POST data
+        form = BillForm(request.user, group, request.POST) # A form bound to the POST data
         if form.is_valid():
             # All validation rules pass, so create new data based on the
             # form contents 

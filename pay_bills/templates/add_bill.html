@@ -6,28 +6,14 @@
 <h1>Record Bill:</h1>
 
 <form method="POST" action="" >
-Comment: {{ form.comment }}
-<p/>
-{{ form.payer.errors }}
-Payer: {{ form.payer }}
-<p/>
-{{ form.amount.errors }}
-Amount: {{ form.amount }}
-<p/>
-<div id="debtors" style="display: show;">
-{% for d in form.debtor_fields %}
-{{ d.errors }}
-{{ d.label }}:
-{{ d }}
-
-
-<br/>
-{% endfor %}
-</div>
+<table>
+{{ form.as_table }}
+</table>
 <input type="submit" value="Create"/>
 </form>
 
 <script>
+$('id_{{form.comment.name}}').activate()
 var split_bill = function() {
   {% for d in form.debtor_fields %}
   $('id_{{ d.name }}').value = parseFloat($('id_amount').getValue())/{{ form.num_debtors }};
