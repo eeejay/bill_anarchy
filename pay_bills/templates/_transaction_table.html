@@ -1,0 +1,26 @@
+<table>
+<tr><th>Date:</th>
+<th>Description:</th>
+{% for p in people %}
+   <th>{{ p }}</th>
+{% endfor %}
+</tr>
+{% for transaction in transaction_table %}
+  {% for row in transaction %}
+    <tr class="{% cycle 'odd' 'even' %}">
+    {% for cell in row %}
+      <td align="right">{{ cell }}</td>
+    {% endfor %}
+    </tr>
+  {% endfor %}
+{% endfor %}
+{% if balances %}
+  <tr>
+  <td></td>
+  <th>Balances:</th>
+  {% for cell in balances %}
+    <td align="right">{{ cell }}</td>
+  {% endfor %}
+  </tr>
+{% endif %}
+</table>

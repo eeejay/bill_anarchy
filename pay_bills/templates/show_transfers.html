@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h1>Transfers:</h1>
+<table>
+<tr><th>Date:</th>
+<th>Description:</th></tr>
+{% for t in transfers %}
+<tr class="{% cycle 'odd' 'even' %}">
+<td>{{ t.date|date:"m/d/Y" }}</td>
+<td>{{ t }}</td>
+</tr>
+{% endfor %}
+</table>
+
+{% endblock %}

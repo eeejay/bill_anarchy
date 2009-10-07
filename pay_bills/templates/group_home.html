@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h1>Balance:</h1>
+<table>
+{% for row in balance_table %}
+<tr class="{% cycle 'odd' 'even' %}">
+<td align="right">{{row.0}}</td>
+<td align="right">{{row.1}}</td>
+</tr>
+{% endfor %}
+</table>
+
+{% endblock %}
