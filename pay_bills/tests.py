@@ -175,8 +175,17 @@ class PayBillsTestCase(TestCase):
  
         # now do it right, and make sure that data and datasets are added
         response = c.post(url, {u'payer':self.red.id, 'payee': self.blue.id, 'amount': 10.,
-                                'date': datetime.date.today(), 'comment': ''})
+                                'comment': ''})
         self.assertRedirects(response, reverse('pay_bills.views.group_home', args=[self.rainbow.name]))
+        t1 = Transfer.objects.latest('id')
+
+        # create another transfer and check that it has a later time
+        import time
+        time.sleep(.1)
+        response = c.post(url, {u'payer':self.red.id, 'payee': self.blue.id, 'amount': 20.,
+                                'comment': ''})
+        t2 = Transfer.objects.latest('id')
+        self.assertNotEqual(t1.date, t2.date)
 
     def test_add_bill(self):
         """ Test the add bill interface"""

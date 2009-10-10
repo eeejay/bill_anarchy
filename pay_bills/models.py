@@ -38,7 +38,7 @@ class Transfer(Model):
     amount = FloatField()
     comment = TextField(blank=True)
     group = ForeignKey(Group)
-    date = DateTimeField('transaction date', default=datetime.datetime.now())
+    date = DateTimeField('transaction date', auto_now_add=True)
     # maybe want is_void boolean at some point
     is_void = BooleanField('is void?')
 
@@ -70,7 +70,7 @@ class Bill(Model):
     participants = ManyToManyField(User, through='Debt')
     payer = ForeignKey(User, related_name='bill_payer')
     comment = TextField(blank=True)
-    date = DateTimeField('transaction date', default=datetime.datetime.now())
+    date = DateTimeField('transaction date', auto_now_add=True)
     group = ForeignKey(Group)
     
     def __unicode__(self):
