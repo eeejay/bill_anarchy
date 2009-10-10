@@ -43,7 +43,10 @@ class Transfer(Model):
     is_void = BooleanField('is void?')
 
     def __unicode__(self):
-        return 'Transfer %d: %s paid %s $%.2f' % (self.id, self.payer, self.payee, self.amount)
+        name = 'Transfer %d: %s paid %s $%.2f' % (self.id, self.payer, self.payee, self.amount)
+        if self.comment:
+            name += ' (%s)' % self.comment
+        return name
 
     def to_rows(self, people):
         """ Turn the transfer data into a row for a transaction table
@@ -56,7 +59,7 @@ class Transfer(Model):
           returns row data in the form [['date', 'description', change in p[0]'s balance, ...]]
         """
         row = [datetime.datetime.strftime(self.date, '%m/%d/%Y'),
-               self.comment or str(self)]
+               str(self)]
         for p in people:
             if p == self.payer:
                 row.append('%.2f' % self.amount)
@@ -74,7 +77,10 @@ class Bill(Model):
     group = ForeignKey(Group)
     
     def __unicode__(self):
-        return 'Bill %d: %s paid $%.2f' % (self.id, self.payer, self.total())
+        name = 'Bill %d: %s paid $%.2f' % (self.id, self.payer, self.total())
+        if self.comment:
+            name += ' (%s)' % self.comment
+        return name
 
     def total(self):
         return sum([d.amount for d in Debt.objects.filter(bill=self)])
@@ -109,7 +115,7 @@ class Bill(Model):
               ['date', 'description', change in p[0]'s balance, ...]
         """
         r1 = [datetime.datetime.strftime(self.date, '%m/%d/%Y'),
-              self.comment or str(self)]
+              str(self)]
         for p in people:
             if self.debt_for(p):
                 r1.append('%.2f' % -self.debt_for(p).amount)
