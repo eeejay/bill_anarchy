@@ -26,6 +26,34 @@ python manage.py runserver # run server locally
 
 
 
+----------
+Migrations
+----------
+
+Changes to the model schema are somewhat difficult in Django.  Here
+are some notes on how to make it a little bit easier::
+
+    python manage.py dumpdata pay_bills >pay_bills_YYYY_MM_DD.json
+
+Make changes to the schema::
+
+    @@ -76,6 +79,7 @@ class Bill(Model):
+         comment = TextField(blank=True)
+         date = DateTimeField('transaction date', auto_now_add=True)
+         group = ForeignKey(Group)
+    +    is_void = BooleanField('is void?', default=False)
+
+Drop the application tables, and then syncdb to load the migrated
+tables::
+
+    python manage.py sqlclear pay_bills |python manage.py dbshell
+    python manage.py syncdb
+
+Repopulated the database with the data you dumped::
+
+    python manage.py loaddata pay_bills pay_bills_YYYY_MM_DD.json
+
+
 LICENSE
 =======
 

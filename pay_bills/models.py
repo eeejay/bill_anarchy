@@ -1,5 +1,6 @@
 from django.db.models import *
 from django.contrib.auth.models import User, Group
+from django.core.urlresolvers import reverse
 
 import datetime
 
@@ -40,14 +41,16 @@ class Transfer(Model):
     comment = TextField(blank=True)
     group = ForeignKey(Group)
     date = DateTimeField('transaction date', auto_now_add=True)
-    # maybe want is_void boolean at some point
-    is_void = BooleanField('is void?')
+    is_void = BooleanField('is void?', default=False)
 
     def __unicode__(self):
-        name = 'Transfer %d: %s paid %s $%.2f' % (self.id, self.payer, self.payee, self.amount)
+        name = 'Transfer: %s paid %s $%.2f' % (self.payer, self.payee, self.amount)
         if self.comment:
             name += ' (%s)' % self.comment
         return name
+
+    def get_absolute_url(self):
+        return reverse('show_transfer', args=[self.id])
 
     def to_rows(self, people):
         """ Turn the transfer data into a row for a transaction table
@@ -76,6 +79,7 @@ class Bill(Model):
     comment = TextField(blank=True)
     date = DateTimeField('transaction date', auto_now_add=True)
     group = ForeignKey(Group)
+    is_void = BooleanField('is void?', default=False)
     
     def __unicode__(self):
         name = 'Bill %d: %s paid $%.2f' % (self.id, self.payer, self.total())
