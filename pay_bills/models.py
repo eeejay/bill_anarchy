@@ -3,6 +3,8 @@ from django.contrib.auth.models import User, Group
 
 import datetime
 
+
+# monkey patch balance method into User model
 def balance(user, group):
     """ A person's balance equals the amount they paid in all
     bill-payment transactions plus the amount they paid in all
@@ -28,10 +30,9 @@ def balance(user, group):
         b -= d.amount
 
     return b
-
-# monkey patch balance method into User model
 User.balance = balance
-    
+
+
 class Transfer(Model):
     payer = ForeignKey(User, related_name='transer_payer')
     payee = ForeignKey(User, related_name='transfer_payee')
