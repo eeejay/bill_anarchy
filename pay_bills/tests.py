@@ -126,6 +126,17 @@ class PayBillsTestCase(TestCase):
         self.assertEquals(response.status_code, 200)
         self.assertTemplateUsed(response, 'show_transfers.html')
 
+    def test_show_transfer(self):
+        """ Test that single transaction shows"""
+ 
+        c = Client()
+        c.login(username='red', password='red')
+        
+        url = reverse('pay_bills.views.show_transfer', args=[self.transfer.id])
+        response = c.get(url)
+        self.assertEquals(response.status_code, 200)
+        self.assertTemplateUsed(response, 'show_transfer.html')
+
     def test_show_bills(self):
         """ Test that bills show"""
  
@@ -136,6 +147,17 @@ class PayBillsTestCase(TestCase):
         response = c.get(url)
         self.assertEquals(response.status_code, 200)
         self.assertTemplateUsed(response, 'show_bills.html')
+
+    def test_show_bill(self):
+        """ Test that single bill shows"""
+ 
+        c = Client()
+        c.login(username='red', password='red')
+        
+        url = reverse('pay_bills.views.show_bill', args=[self.bill.id])
+        response = c.get(url)
+        self.assertEquals(response.status_code, 200)
+        self.assertTemplateUsed(response, 'show_bill.html')
 
     def test_show_all_transactions(self):
         """ Test that all transactions show"""

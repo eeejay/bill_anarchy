@@ -198,6 +198,18 @@ def show_transfers(request, group):
     transfers = Transfer.objects.filter(group=group)
     return render_to_response('show_transfers.html', {'transfers': transfers,
                                                       'group': group, 'current_user': request.user})
+
+
+@login_required
+def show_transfer(request, id):
+    transfer = get_object_or_404(Transfer, id=id)
+    group = transfer.group
+    if not group in request.user.groups.all():
+        return HttpResponseRedirect('/login/?next=%s' % request.path)
+
+    return render_to_response('show_transfer.html', {'transfer': transfer, 'transfer_fields': transfer.__dict__.items(),
+                                                      'group': group, 'current_user': request.user})
+
 @login_required
 def show_bills(request, group):
     group = get_object_or_404(Group, name=group)
@@ -213,3 +225,13 @@ def show_bills(request, group):
                                'group': group,
                                'current_user': request.user})
 
+@login_required
+def show_bill(request, id):
+    bill = get_object_or_404(Bill, id=id)
+    group = bill.group
+
+    if not group in request.user.groups.all():
+        return HttpResponseRedirect('/login/?next=%s' % request.path)
+
+    return render_to_response('show_bill.html', {'bill': bill, 'bill_fields': bill.__dict__.items(),
+                                                 'group': group, 'current_user': request.user})

@@ -10,6 +10,10 @@ urlpatterns = patterns('pay_bills.views',
     (r'(\w+)/add/transfer', 'add_transfer'),
     (r'(\w+)/add/bill', 'add_bill'),
     (r'(\w+)/view/all', 'show_all_transactions'),
+                       
+    (r'view/transfer/(\w+)', 'show_transfer'),
+    (r'view/bill/(\w+)', 'show_bill'),
+                       
     (r'(\w+)/export/\w+\.(\w+)', 'show_all_transactions'),
     (r'(\w+)/view/bills', 'show_bills'),
     (r'(\w+)/view/transfers', 'show_transfers'),

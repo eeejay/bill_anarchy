@@ -50,7 +50,7 @@ class Transfer(Model):
         return name
 
     def get_absolute_url(self):
-        return reverse('show_transfer', args=[self.id])
+        return reverse('pay_bills.views.show_transfer', args=[self.id])
 
     def to_rows(self, people):
         """ Turn the transfer data into a row for a transaction table
@@ -63,7 +63,7 @@ class Transfer(Model):
           returns row data in the form [['date', 'description', change in p[0]'s balance, ...]]
         """
         row = [datetime.datetime.strftime(self.date, '%m/%d/%Y'),
-               str(self)]
+              '<a href="%s">%s</a>' % (self.get_absolute_url(), str(self))]
         for p in people:
             if p == self.payer:
                 row.append('%.2f' % self.amount)
@@ -82,10 +82,13 @@ class Bill(Model):
     is_void = BooleanField('is void?', default=False)
     
     def __unicode__(self):
-        name = 'Bill %d: %s paid $%.2f' % (self.id, self.payer, self.total())
+        name = 'Bill: %s paid $%.2f' % (self.payer, self.total())
         if self.comment:
             name += ' (%s)' % self.comment
         return name
+
+    def get_absolute_url(self):
+        return reverse('pay_bills.views.show_bill', args=[self.id])
 
     def total(self):
         return sum([d.amount for d in Debt.objects.filter(bill=self)])
@@ -120,7 +123,7 @@ class Bill(Model):
               ['date', 'description', change in p[0]'s balance, ...]
         """
         r1 = [datetime.datetime.strftime(self.date, '%m/%d/%Y'),
-              str(self)]
+              '<a href="%s">%s</a>' % (self.get_absolute_url(), str(self))]
         for p in people:
             if self.debt_for(p):
                 r1.append('%.2f' % -self.debt_for(p).amount)

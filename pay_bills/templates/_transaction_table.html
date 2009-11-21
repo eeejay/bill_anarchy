@@ -9,7 +9,7 @@
   {% for row in transaction %}
     <tr class="{% cycle 'odd' 'even' %}">
     {% for cell in row %}
-      <td align="right">{{ cell }}</td>
+      <td align="right">{{ cell|safe }}</td>
     {% endfor %}
     </tr>
   {% endfor %}
