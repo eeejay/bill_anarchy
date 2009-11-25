@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>{{bill}}:</h1>
+
+<table>
+{% for key, val in bill_fields %}
+<tr>
+<td>{{ key }}</td>
+<td>{{ val }}</td>
+</tr>
+{% endfor %}
+</table>
+
+{% endblock %}
