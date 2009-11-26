@@ -2,8 +2,29 @@
 
 {% block content %}
 
-<h1>Create Account:</h1>
+<h1>Sign Up:</h1>
 
-This feature is not yet implemented.
+{% if user.is_authenticated %}
+  <p>You are already logged in.</p>
+{% else %}
+<p>Already have an account? <a href="/accounts/login">Log In</a>!</p>
 
+        <form class="signup uniForm" id="signup_form" method="post" action="">
+            <fieldset class="inlineLabels">
+	      <table>
+                {{ form.as_table }}
+	      </table>
+                <div class="form_blick">
+                    <input type="submit" value="Sign Up &raquo" />
+                </div>
+            </fieldset>
+        </form>
+
+        
+        {% url terms as terms_url %}
+        {% url privacy as privacy_url %}
+        <p>By clicking "Sign Up", you are indicating that you have read and agree to the <a href="{{ terms_url }}">Terms of Use</a> and <a href="{{ privacy_url }}">Privacy Policy</a>.</p>
+        
+        <p>If you have any trouble creating your account, contact us at <a href="mailto:{{ CONTACT_EMAIL }}">{{ CONTACT_EMAIL }}</a>.</p>
+{% endif %}
 {% endblock %}

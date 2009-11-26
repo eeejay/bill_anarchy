@@ -7,25 +7,72 @@ import datetime
 
 from models import *
 
-class PayBillsTestCase(TestCase):
-    def create_user(self, username, group):
-        u = User.objects.create_user(username, '', username)
-        u.groups.add(group)
-        return u
-    
-    def setUp(self):
-        # create groups
-        self.rainbow = Group.objects.create(name='rainbow')
-        self.dog_colors = Group.objects.create(name='dog-colors')
+def create_user(username, group):
+    u = User.objects.create_user(username, '', username)
+    u.groups.add(group)
+    return u
 
-        # create people and add them to groups
-        self.red = self.create_user('red', self.rainbow)
-        self.blue = self.create_user('blue', self.rainbow)
-        self.green = self.create_user('green', self.rainbow)
-        self.yellow = self.create_user('yellow', self.rainbow)
+def create_users_and_groups(test_case):
+    # create groups
+    test_case.rainbow = Group.objects.create(name='rainbow')
+    test_case.dog_colors = Group.objects.create(name='dog-colors')
+
+    # create people and add them to groups
+    test_case.red = create_user('red', test_case.rainbow)
+    test_case.blue = create_user('blue', test_case.rainbow)
+    test_case.green = create_user('green', test_case.rainbow)
+    test_case.yellow = create_user('yellow', test_case.rainbow)
+
+    test_case.brown = create_user('brown', test_case.dog_colors)
+    test_case.silver = create_user('silver', test_case.dog_colors)
+
+
+class UserTestCase(TestCase):
+    def setUp(self):
+        create_users_and_groups(self)
+
+    def test_create_account_get(self):
+        """ Test that creating a new user works as expected"""
+        c = Client()
+        url = reverse('pay_bills.views.create_account')
+
+        # test GET
+        response = c.get(url)
+        self.assertEquals(response.status_code, 200)
+        self.assertTemplateUsed(response, 'create_account.html')
+
+        # test with good POST data
+        response = c.post(url, dict(username='chartruse',
+                                    password1='chartruse',
+                                    password2='chartruse',
+                                    email='',
+                                    confirmation_key=''))
+        self.assertRedirects(response, reverse('pay_bills.views.home'))
+        user = User.objects.latest('id')
+        self.assertEquals(user.username, 'chartruse')
         
-        self.brown = self.create_user('brown', self.dog_colors)
-        self.silver = self.create_user('silver', self.dog_colors)
+        # test with password typo POST data
+        response = c.post(url, dict(username='greenish-red',
+                                    password1='greenish-red',
+                                    password2='reddish-green',
+                                    email='',
+                                    confirmation_key=''))
+        self.assertEquals(response.status_code, 200)
+        self.assertTemplateUsed(response, 'create_account.html')
+
+        # test with a username that is taken
+        response = c.post(url, dict(username='chartruse',
+                                    password1='pw1',
+                                    password2='pw1',
+                                    email='',
+                                    confirmation_key=''))
+        self.assertEquals(response.status_code, 200)
+        self.assertTemplateUsed(response, 'create_account.html')
+        
+
+class PayBillsTestCase(TestCase):
+    def setUp(self):
+        create_users_and_groups(self)
 
         # rainbow group activity
         self.bill = Bill.objects.create(payer=self.red, group=self.rainbow)
@@ -103,18 +150,6 @@ class PayBillsTestCase(TestCase):
 
         # TODO: add test for creating the group
 
-    def test_create_account(self):
-        """ Test that user inviting controller works"""
- 
-        c = Client()
-        
-        url = reverse('pay_bills.views.create_account')
-        response = c.get(url)
-        self.assertEquals(response.status_code, 200)
-        self.assertTemplateUsed(response, 'create_account.html')
-
-        # TODO: add test for creating the group
-        
     def test_show_transfers(self):
         """ Test that transfers show"""
  
