@@ -3,7 +3,16 @@
 {% block content %}
 
 <h1>Create Group:</h1>
-
-This feature is not yet implemented.
+        <form id="group_form" method="POST" action="" class="uniForm">
+            <fieldset class="inlineLabels">
+	      <table>
+                {{ group_form.as_table }}
+		</table>
+                <div class="form_block">
+                    <input type="hidden" name="action" value="create" />
+                    <input type="submit" value="create"/>
+                </div>
+            </fieldset>
+        </form>
 
 {% endblock %}

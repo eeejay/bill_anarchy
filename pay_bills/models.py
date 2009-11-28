@@ -34,6 +34,9 @@ def balance(user, group):
 User.balance = balance
 
 
+# monkey patch get_absolute_url into Group model
+Group.get_absolute_url = lambda group: reverse('pay_bills.views.group_home', args=[group.name])
+
 class Transfer(Model):
     payer = ForeignKey(User, related_name='transer_payer')
     payee = ForeignKey(User, related_name='transfer_payee')

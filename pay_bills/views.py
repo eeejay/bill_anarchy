@@ -28,10 +28,31 @@ def group_home(request, group):
                               {'balance_table': balance_table,
                                'group': group, 'current_user': request.user})
 
+
+class GroupForm(forms.Form):
+    name = forms.SlugField(max_length=20,
+                           label = _('Name'),
+                           help_text = _('a name consisting only of letters, numbers, underscores and hyphens.'),
+                           error_message = _('This value must contain only letters, numbers, underscores and hyphens.'))
+    
+    def clean_name(self):
+        if Group.objects.filter(name__iexact=self.cleaned_data['name']).count() > 0:
+            raise forms.ValidationError(_('A group already exists with that name.'))
+        return self.cleaned_data['name']
+
 @login_required
-def create_group(request):
-    return render_to_response('create_group.html',
-                              {'current_user': request.user})
+def create_group(request, form_class=GroupForm, template_name='create_group.html'):
+    group_form = form_class(request.POST or None)
+    
+    if group_form.is_valid():
+        group = Group.objects.create(name=group_form.cleaned_data['name'])
+        group.user_set.add(request.user)
+        #group.save()
+        return HttpResponseRedirect(group.get_absolute_url())
+    
+    return render_to_response(template_name,
+                              {'group_form': group_form,
+                               'current_user': request.user})
 
 @login_required
 def invite_user(request, group=''):

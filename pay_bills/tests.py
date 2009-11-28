@@ -31,7 +31,7 @@ class UserTestCase(TestCase):
     def setUp(self):
         create_users_and_groups(self)
 
-    def test_create_account_get(self):
+    def test_create_account(self):
         """ Test that creating a new user works as expected"""
         c = Client()
         url = reverse('pay_bills.views.create_account')
@@ -68,8 +68,49 @@ class UserTestCase(TestCase):
                                     confirmation_key=''))
         self.assertEquals(response.status_code, 200)
         self.assertTemplateUsed(response, 'create_account.html')
-        
 
+class GroupTestCase(TestCase):
+    def setUp(self):
+        create_users_and_groups(self)
+
+    def test_create_group(self):
+        """ Test that creating a new user works as expected"""
+        c = Client()
+        url = reverse('pay_bills.views.create_group')
+
+        # test unauthed GET
+        response = c.get(url)
+        self.assertEquals(response.status_code, 302)
+
+        # test authed GET
+        c.login(username='red', password='red')
+        response = c.get(url)
+        self.assertEquals(response.status_code, 200)
+        self.assertTemplateUsed(response, 'create_group.html')
+
+        # test good POST
+        response = c.post(url, dict(name='koolaid-colors'))
+        group = Group.objects.latest('id')
+        self.assertEquals(group.name, 'koolaid-colors')
+        self.assertEquals([u.id for u in group.user_set.all()], [self.red.id])
+        self.assertRedirects(response, reverse('pay_bills.views.group_home', args=[group.name]))
+
+        # test POST with no name does not create anything
+        response = c.post(url, dict(name=''))
+        group = Group.objects.latest('id')
+        self.assertEquals(group.name, 'koolaid-colors')
+        self.assertEquals(response.status_code, 200)
+        self.assertTemplateUsed(response, 'create_group.html')
+
+        # test POST with duplicate name does not create anything
+        response = c.post(url, dict(name='dog-colors'))
+        group = Group.objects.latest('id')
+        self.assertEquals(group.name, 'koolaid-colors')
+        self.assertEquals(response.status_code, 200)
+        self.assertTemplateUsed(response, 'create_group.html')
+
+                          
+        
 class PayBillsTestCase(TestCase):
     def setUp(self):
         create_users_and_groups(self)
