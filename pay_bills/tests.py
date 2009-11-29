@@ -2,6 +2,7 @@ from django.test import TestCase
 from django.test.client import Client
  
 from django.core.urlresolvers import reverse
+from django.core import mail
 import urllib
 import datetime
 
@@ -30,6 +31,17 @@ def create_users_and_groups(test_case):
 class UserTestCase(TestCase):
     def setUp(self):
         create_users_and_groups(self)
+
+    def test_home(self):
+        """ Test that index page loads"""
+ 
+        c = Client()
+        c.login(username='red', password='red')
+
+        url = reverse('pay_bills.views.home')
+        response = c.get(url)
+        self.assertEquals(response.status_code, 200)
+        self.assertTemplateUsed(response, 'home.html')
 
     def test_create_account(self):
         """ Test that creating a new user works as expected"""
@@ -73,6 +85,17 @@ class GroupTestCase(TestCase):
     def setUp(self):
         create_users_and_groups(self)
 
+    def test_group_home(self):
+        """ Test that index page loads when group is specified"""
+ 
+        c = Client()
+        c.login(username='red', password='red')
+        
+        url = reverse('pay_bills.views.group_home', args=[self.rainbow.name])
+        response = c.get(url)
+        self.assertEquals(response.status_code, 200)
+        self.assertTemplateUsed(response, 'group_home.html')
+
     def test_create_group(self):
         """ Test that creating a new user works as expected"""
         c = Client()
@@ -109,7 +132,45 @@ class GroupTestCase(TestCase):
         self.assertEquals(response.status_code, 200)
         self.assertTemplateUsed(response, 'create_group.html')
 
-                          
+    def test_invite_users(self):
+        """ Test that user inviting controller works"""
+ 
+        c = Client()
+        c.login(username='red', password='red')
+        
+        url = reverse('pay_bills.views.invite_users', args=[self.rainbow])
+        response = c.get(url)
+        self.assertEquals(response.status_code, 200)
+        self.assertTemplateUsed(response, 'invite_users.html')
+
+        response = c.post(url, dict(email_list='red@example.com\nbrownish-green@example.com'))
+        self.assertEquals(len(mail.outbox), 2)
+        self.assertRedirects(response, reverse('pay_bills.views.group_home', args=[self.rainbow]))
+
+
+    def test_join_group_with_invite(self):
+        """ Test that join group with invite code works"""
+ 
+        c = Client()
+
+        invite = SignupCode.objects.create(code='test_code',
+                                           email='red@example.com',
+                                           group=self.rainbow)
+
+        url = reverse('pay_bills.views.create_account') + '?code=%s' % invite.code
+
+        response = c.get(url)
+        self.assertEquals(response.status_code, 200)
+        self.assertTemplateUsed(response, 'create_account.html')
+
+        response = c.post(url, dict(username='chartruse',
+                                    password1='pw1',
+                                    password2='pw1',
+                                    email='',
+                                    confirmation_key=''))
+
+        assert User.objects.latest('id') in invite.group.user_set.all()
+        self.assertRedirects(response, reverse('pay_bills.views.group_home', args=[invite.group]))
         
 class PayBillsTestCase(TestCase):
     def setUp(self):
@@ -143,54 +204,6 @@ class PayBillsTestCase(TestCase):
  
 
     # functional tests
-    def test_home(self):
-        """ Test that index page loads"""
- 
-        c = Client()
-        c.login(username='red', password='red')
-
-        url = reverse('pay_bills.views.home')
-        response = c.get(url)
-        self.assertEquals(response.status_code, 200)
-        self.assertTemplateUsed(response, 'home.html')
-
-    def test_group_home(self):
-        """ Test that index page loads when group is specified"""
- 
-        c = Client()
-        c.login(username='red', password='red')
-        
-        url = reverse('pay_bills.views.group_home', args=[self.rainbow.name])
-        response = c.get(url)
-        self.assertEquals(response.status_code, 200)
-        self.assertTemplateUsed(response, 'group_home.html')
-        
-    def test_create_group(self):
-        """ Test that group creation controller works"""
- 
-        c = Client()
-        c.login(username='red', password='red')
-        
-        url = reverse('pay_bills.views.create_group')
-        response = c.get(url)
-        self.assertEquals(response.status_code, 200)
-        self.assertTemplateUsed(response, 'create_group.html')
-
-        # TODO: add test for creating the group
-        
-    def test_invite_user(self):
-        """ Test that user inviting controller works"""
- 
-        c = Client()
-        c.login(username='red', password='red')
-        
-        url = reverse('pay_bills.views.invite_user')
-        response = c.get(url)
-        self.assertEquals(response.status_code, 200)
-        self.assertTemplateUsed(response, 'invite_user.html')
-
-        # TODO: add test for creating the group
-
     def test_show_transfers(self):
         """ Test that transfers show"""
  

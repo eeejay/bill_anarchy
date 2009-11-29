@@ -37,6 +37,21 @@ User.balance = balance
 # monkey patch get_absolute_url into Group model
 Group.get_absolute_url = lambda group: reverse('pay_bills.views.group_home', args=[group.name])
 
+
+# signup code model
+class SignupCode(Model):
+    """
+    """
+    code = CharField(max_length=40)
+    email = EmailField()
+    notes = TextField(blank=True)
+    created = DateTimeField(auto_now_add=True, editable=False)
+    group = ForeignKey(Group)
+    
+    def __unicode__(self):
+        return self.code
+        
+# models for pay_bill app
 class Transfer(Model):
     payer = ForeignKey(User, related_name='transer_payer')
     payee = ForeignKey(User, related_name='transfer_payee')

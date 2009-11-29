@@ -1,11 +1,14 @@
 from django.conf.urls.defaults import *
 import pay_bills.views
 
-urlpatterns = patterns('pay_bills.views',
-    (r'create_group/', 'create_group'),
-    (r'([-\w]+)/invite_user/', 'invite_user'),
-    (r'invite_user/', 'invite_user'),
+urlpatterns = patterns(
+    'pay_bills.views',
+
     (r'accounts/create_account/', 'create_account'),
+
+    (r'create_group/', 'create_group'),
+    
+    (r'([-\w]+)/invite_users/', 'invite_users'),
     (r'([-\w]+)/leave/', 'leave_group'),
     (r'([-\w]+)/add/transfer', 'add_transfer'),
     (r'([-\w]+)/add/bill', 'add_bill'),

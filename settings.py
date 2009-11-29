@@ -86,13 +86,16 @@ LOGIN_REDIRECT_URL = '/'
 
 # override these site specific settings here, or in
 # a local_settings.py file which is not under version control
-DEFAULT_FROM_EMAIL = 'bill_anarchy@example.net'
-EMAIL_HOST = 'mail.example.net'
-EMAIL_HOST_USER = 'example_user'
-EMAIL_HOST_PASSWORD = 'example_password'
-EMAIL_PORT = 25
-EMAIL_USE_TLS = True
+DEFAULT_FROM_EMAIL = 'bill_anarchy@localhost'
+EMAIL_HOST = 'localhost'
+EMAIL_HOST_USER = ''
+EMAIL_HOST_PASSWORD = ''
+EMAIL_PORT = 1025
+EMAIL_USE_TLS = False
 EMAIL_SUBJECT_PREFIX = '[Bill Anarchy (is Order)]'
+
+# to see email output in development, run this in a console::
+#     python -m smtpd -n -c DebuggingServer localhost:1025
 
 try:
     from local_settings import *

@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h1>Invite User:</h1>
+<form id="invite_form" method="POST" action="" class="uniForm">
+  <fieldset class="inlineLabels">
+    <table>
+      {{ invite_form.as_table }}
+    </table>
+    <div class="form_block">
+      <input type="hidden" name="action" value="invite" />
+      <input type="submit" value="invite"/>
+    </div>
+  </fieldset>
+</form>
+{% endblock %}

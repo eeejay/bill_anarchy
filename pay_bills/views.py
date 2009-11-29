@@ -2,6 +2,7 @@ from pay_bills.models import *
 from django.http import *
 from django.core.urlresolvers import reverse
 from django.shortcuts import render_to_response, get_object_or_404
+from django.template.loader import render_to_string
 from django import forms
 from django.utils.safestring import mark_safe
 from django.contrib.auth.decorators import login_required
@@ -54,12 +55,56 @@ def create_group(request, form_class=GroupForm, template_name='create_group.html
                               {'group_form': group_form,
                                'current_user': request.user})
 
+class InviteForm(forms.Form):
+    email_list = forms.CharField(
+        widget=forms.Textarea(attrs={'rows':20, 'cols':80, 'wrap': 'off'}),
+        label = _('e-mail Addresses'),
+        help_text = _('a list of email addresses, one per line.'))
+    
+    def clean_email_list(self):
+        return self.cleaned_data['email_list'].split('\n')
+
+def random_code(len=12):
+    import random
+    import string
+    
+    return ''.join(random.choice(string.digits + string.letters) for i in xrange(len))
+
+    
 @login_required
-def invite_user(request, group=''):
-    if group:
-        group = get_object_or_404(Group, name=group)
-    return render_to_response('invite_user.html',
-                              {'group': group,
+def invite_users(request, group, form_class=InviteForm, template_name='invite_users.html'):
+    from django.core.mail import send_mass_mail
+    from django.contrib.sites.models import Site
+
+    group = get_object_or_404(Group, name=group)
+
+    invite_form = form_class(request.POST or None)
+    
+    if invite_form.is_valid():
+        data_list = []
+        subject = _('You\'re invited to Bill Anarchy')
+        message = _('Visit %s to join group %s.')
+        current_site = Site.objects.get_current()
+        domain = unicode(current_site.domain)
+
+        for email in invite_form.cleaned_data['email_list']:
+            invite = SignupCode.objects.create(code=random_code(), email=email, group=group)
+
+            message = render_to_string('invite_user.txt',
+                                       {'invite': invite,
+                                        'domain': domain,})
+            data_list.append([subject,
+                              message,
+                              settings.DEFAULT_FROM_EMAIL,
+                              [email]])
+        send_mass_mail(data_list)
+
+        # some sort of notification of this action
+        
+        return HttpResponseRedirect(group.get_absolute_url())
+    return render_to_response(template_name,
+                              {'invite_form': invite_form,
+                               'group': group,
                                'current_user': request.user})
 
 @login_required
@@ -67,6 +112,7 @@ def leave_group(request, group):
     group = get_object_or_404(Group, name=group)
     return render_to_response('leave_group.html',
                               {'group': group, 'current_user': request.user})
+
 
 alnum_re = re.compile(r'^\w+$')
 
@@ -154,6 +200,7 @@ class SignupForm(forms.Form):
         return username, password # required for authenticate()
  
 
+# adapted from pinax.apps.account.views
 def create_account(request):
     form_class = SignupForm
     success_url = reverse('pay_bills.views.home')
@@ -161,19 +208,24 @@ def create_account(request):
     if request.method == "POST":
         form = form_class(request.POST)
         if form.is_valid():
+            code = request.GET.get('code')
+            if code:
+                invite = get_object_or_404(SignupCode, code=code)
+                success_url = reverse('pay_bills.views.group_home', args=[invite.group.name])
+
             username, password = form.save()
-            if settings.ACCOUNT_EMAIL_VERIFICATION:
-                return render_to_response("account/verification_sent.html", {
-                    "email": form.cleaned_data["email"],
-                }, context_instance=RequestContext(request))
-            else:
-                user = authenticate(username=username, password=password)
-                auth_login(request, user)
-                request.user.message_set.create(
-                    message=_("Successfully logged in as %(username)s.") % {
+
+            user = authenticate(username=username, password=password)
+            auth_login(request, user)
+            request.user.message_set.create(
+                message=_("Successfully logged in as %(username)s.") % {
                     "username": user.username
-                })
-                return HttpResponseRedirect(success_url)
+                    })
+
+            if code:
+               invite.group.user_set.add(user)
+               
+            return HttpResponseRedirect(success_url)
     else:
         form = form_class()
     return render_to_response('create_account.html', dict(form=form))
