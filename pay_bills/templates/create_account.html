@@ -7,7 +7,7 @@
 {% if user.is_authenticated %}
   <p>You are already logged in.</p>
 {% else %}
-<p>Already have an account? <a href="/accounts/login">Log In</a>!</p>
+<p>Already have an account? <a href="/accounts/login/{% if code %}?code={{ code }}{% endif %}">Log In</a>!</p>
 
         <form class="signup uniForm" id="signup_form" method="post" action="">
             <fieldset class="inlineLabels">

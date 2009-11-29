@@ -107,6 +107,11 @@ def invite_users(request, group, form_class=InviteForm, template_name='invite_us
                                'group': group,
                                'current_user': request.user})
 
+def redeem_invite(request, code):
+    invite = get_object_or_404(SignupCode, code=code)
+    return HttpResponseRedirect(reverse('pay_bills.views.create_account') + '?code=%s' % code)
+    
+
 @login_required
 def leave_group(request, group):
     group = get_object_or_404(Group, name=group)
@@ -204,14 +209,15 @@ class SignupForm(forms.Form):
 def create_account(request):
     form_class = SignupForm
     success_url = reverse('pay_bills.views.home')
+
+    code = request.GET.get('code')
+    if code:
+        invite = get_object_or_404(SignupCode, code=code)
+        success_url = reverse('pay_bills.views.group_home', args=[invite.group.name])
     
     if request.method == "POST":
         form = form_class(request.POST)
         if form.is_valid():
-            code = request.GET.get('code')
-            if code:
-                invite = get_object_or_404(SignupCode, code=code)
-                success_url = reverse('pay_bills.views.group_home', args=[invite.group.name])
 
             username, password = form.save()
 
@@ -224,11 +230,36 @@ def create_account(request):
 
             if code:
                invite.group.user_set.add(user)
+               invite.delete()
                
             return HttpResponseRedirect(success_url)
     else:
         form = form_class()
-    return render_to_response('create_account.html', dict(form=form))
+    return render_to_response('create_account.html', dict(form=form, code=code))
+
+def login(request):
+    import django.contrib.auth
+    
+    authentication_form = django.contrib.auth.forms.AuthenticationForm
+    success_url = reverse('pay_bills.views.home')
+
+    response = django.contrib.auth.views.login(request, template_name='login.html')
+
+    # redeem valid invite code for group membership, if possible
+    code = request.GET.get('code')
+    form = authentication_form(data=request.POST)
+    if code and form.is_valid():
+        user = form.get_user()
+        if user and user.is_authenticated():
+            invite = get_object_or_404(SignupCode, code=code)
+            success_url = reverse('pay_bills.views.group_home', args=[invite.group.name])
+            invite.group.user_set.add(request.user)
+            invite.delete()
+
+            return HttpResponseRedirect(success_url)
+
+    return response
+
 
 class TransferForm(forms.Form):
     comment = forms.CharField(required=False)

@@ -7,8 +7,6 @@ admin.autodiscover()
 urlpatterns = patterns('',
     (r'^admin/(.*)', admin.site.root),
                        
-    (r'^accounts/login/$', 'django.contrib.auth.views.login',
-     {'template_name': 'login.html'}),
     (r'^accounts/logout/$', 'django.contrib.auth.views.logout',
      {'next_page': '/'}),
     (r'^accounts/forgot_password/$', 'django.contrib.auth.views.password_reset'),

@@ -4,12 +4,15 @@ import pay_bills.views
 urlpatterns = patterns(
     'pay_bills.views',
 
-    (r'accounts/create_account/', 'create_account'),
+    (r'^accounts/create_account/$', 'create_account'),
+    (r'^accounts/login/', 'login'),
 
     (r'create_group/', 'create_group'),
-    
-    (r'([-\w]+)/invite_users/', 'invite_users'),
     (r'([-\w]+)/leave/', 'leave_group'),
+    (r'([-\w]+)/invite_users/', 'invite_users'),
+    (r'invitation/([-\w]+)', 'redeem_invite'),
+    
+    
     (r'([-\w]+)/add/transfer', 'add_transfer'),
     (r'([-\w]+)/add/bill', 'add_bill'),
     (r'([-\w]+)/view/all', 'show_all_transactions'),

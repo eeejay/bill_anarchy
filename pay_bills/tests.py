@@ -32,6 +32,14 @@ class UserTestCase(TestCase):
     def setUp(self):
         create_users_and_groups(self)
 
+    def test_login(self):
+        """ Test login"""
+        c = Client()
+        url = reverse('pay_bills.views.login')
+        response = c.get(url)
+        self.assertEquals(response.status_code, 200)
+        self.assertTemplateUsed(response, 'login.html')
+        
     def test_home(self):
         """ Test that index page loads"""
  
@@ -157,20 +165,54 @@ class GroupTestCase(TestCase):
                                            email='red@example.com',
                                            group=self.rainbow)
 
-        url = reverse('pay_bills.views.create_account') + '?code=%s' % invite.code
+        url = reverse('pay_bills.views.redeem_invite', args=[invite.code])
+        response = c.get(url)
+        self.assertRedirects(response, reverse('pay_bills.views.create_account') + '?code=%s' % invite.code)
 
+        url = reverse('pay_bills.views.create_account') + '?code=%s' % invite.code
         response = c.get(url)
         self.assertEquals(response.status_code, 200)
         self.assertTemplateUsed(response, 'create_account.html')
 
+        # make sure that code works
         response = c.post(url, dict(username='chartruse',
                                     password1='pw1',
                                     password2='pw1',
                                     email='',
                                     confirmation_key=''))
 
+        self.assertEqual(User.objects.latest('id').username, 'chartruse')
         assert User.objects.latest('id') in invite.group.user_set.all()
         self.assertRedirects(response, reverse('pay_bills.views.group_home', args=[invite.group]))
+
+        # make sure that code works only once
+        response = c.post(url, dict(username='chartruse2',
+                                    password1='pw1',
+                                    password2='pw1',
+                                    email='',
+                                    confirmation_key=''))
+
+        self.assertNotEqual(User.objects.latest('id').username, 'chartruse2')
+        assert not 'chartruse2' in [u.username for u in invite.group.user_set.all()]
+
+        # test invite code for an existing user
+        invite = SignupCode.objects.create(code='test_code',
+                                           email='silver@example.com',
+                                           group=self.dog_colors)
+
+        url = reverse('pay_bills.views.login') + '?code=%s' % invite.code
+        response = c.post(url, dict(username='blue',
+                                    password='blue'))
+
+        assert self.blue in invite.group.user_set.all()
+        self.assertRedirects(response, reverse('pay_bills.views.group_home', args=[invite.group]))
+
+        # test invite code for an existing user only works once
+        response = c.post(url, dict(username='red',
+                                    password='red'))
+
+        assert not self.red in invite.group.user_set.all()
+        
         
 class PayBillsTestCase(TestCase):
     def setUp(self):

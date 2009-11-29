@@ -1,3 +1,5 @@
 You have been invited to split bills with {{ invite.group }} on Bill Anarchy (is Order).
 
-Follow this link http://{{ domain }}/accounts/create_account/?code={{ invite.code }} to accept.
+Follow this link to accept:
+   http://{{ domain }}/invitation/{{ invite.code }}
+
