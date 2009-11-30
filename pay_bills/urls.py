@@ -5,10 +5,11 @@ urlpatterns = patterns(
     'pay_bills.views',
 
     (r'^accounts/create_account/$', 'create_account'),
+    (r'^login/', 'login'),
     (r'^accounts/login/', 'login'),
 
     (r'create_group/', 'create_group'),
-    (r'([-\w]+)/leave/', 'leave_group'),
+    (r'([-\w]+)/remove_users/', 'remove_users'),
     (r'([-\w]+)/invite_users/', 'invite_users'),
     (r'invitation/([-\w]+)', 'redeem_invite'),
     

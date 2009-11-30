@@ -77,6 +77,8 @@ def invite_users(request, group, form_class=InviteForm, template_name='invite_us
     from django.contrib.sites.models import Site
 
     group = get_object_or_404(Group, name=group)
+    if not group in request.user.groups.all():
+        return HttpResponseRedirect('/login/?next=%s' % request.path)
 
     invite_form = form_class(request.POST or None)
     
@@ -88,6 +90,11 @@ def invite_users(request, group, form_class=InviteForm, template_name='invite_us
         domain = unicode(current_site.domain)
 
         for email in invite_form.cleaned_data['email_list']:
+            email = email.strip()
+
+            if not email:
+                continue
+            
             invite = SignupCode.objects.create(code=random_code(), email=email, group=group)
 
             message = render_to_string('invite_user.txt',
@@ -96,11 +103,11 @@ def invite_users(request, group, form_class=InviteForm, template_name='invite_us
             data_list.append([subject,
                               message,
                               settings.DEFAULT_FROM_EMAIL,
-                              [email.strip()]])
-        send_mass_mail(data_list)
+                              [email]])
 
-        # some sort of notification of this action
-        
+        send_mass_mail(data_list)
+        request.user.message_set.create(message='Sent %d invite(s)'%len(data_list))
+
         return HttpResponseRedirect(group.get_absolute_url())
     return render_to_response(template_name,
                               {'invite_form': invite_form,
@@ -111,12 +118,38 @@ def redeem_invite(request, code):
     invite = get_object_or_404(SignupCode, code=code)
     return HttpResponseRedirect(reverse('pay_bills.views.create_account') + '?code=%s' % code)
     
-
+class RemoveForm(forms.Form):
+    def __init__(self, current_user, group, *args, **kwargs):
+        super(RemoveForm, self).__init__(*args, **kwargs)
+        self.group = group
+        self.fields['remove'] = forms.ModelChoiceField(queryset=group.user_set.all(),
+                                                      initial=current_user.id)
+    def clean(self):
+        from numpy import abs
+        if abs(self.cleaned_data['remove'].balance(self.group)) >= .01:
+            raise forms.ValidationError(_('Balance must be zero to leave group.'))
+        return self.cleaned_data
+    
 @login_required
-def leave_group(request, group):
+def remove_users(request, group, form_class=RemoveForm):
     group = get_object_or_404(Group, name=group)
-    return render_to_response('leave_group.html',
-                              {'group': group, 'current_user': request.user})
+    if not group in request.user.groups.all():
+        return HttpResponseRedirect('/login/?next=%s' % request.path)
+
+    if request.method == "POST":
+        form = form_class(request.user, group, request.POST)
+        if form.is_valid():
+            remove = form.cleaned_data['remove']
+            group.user_set.remove(remove)
+            if remove == request.user:
+                return HttpResponseRedirect(reverse('pay_bills.views.home'))
+            else:
+                return HttpResponseRedirect(reverse('pay_bills.views.remove_users', args=[group.name]))
+
+    else:
+        form = form_class(request.user, group)
+    return render_to_response('remove_users.html',
+                              {'group': group, 'remove_form': form})
 
 
 alnum_re = re.compile(r'^\w+$')
@@ -229,8 +262,8 @@ def create_account(request):
                     })
 
             if code:
-               invite.group.user_set.add(user)
-               invite.delete()
+                invite.group.user_set.add(user)
+                invite.delete()
                
             return HttpResponseRedirect(success_url)
     else:

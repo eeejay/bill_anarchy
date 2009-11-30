@@ -156,6 +156,37 @@ class GroupTestCase(TestCase):
         self.assertRedirects(response, reverse('pay_bills.views.group_home', args=[self.rainbow]))
 
 
+    def test_remove_users(self):
+        """ Test that user removal works"""
+ 
+        c = Client()
+        c.login(username='red', password='red')
+        
+        url = reverse('pay_bills.views.remove_users', args=[self.rainbow])
+        response = c.get(url)
+        self.assertEquals(response.status_code, 200)
+        self.assertTemplateUsed(response, 'remove_users.html')
+
+        # remove other
+        response = c.post(url, dict(remove=self.blue.id))
+        self.assertRedirects(response, url)
+        assert not self.blue in self.rainbow.user_set.all()
+
+        # fail to remove other with non-zero balance
+        Transfer.objects.create(payer=self.yellow, payee=self.green, amount=25.,
+                                date=datetime.datetime.today(),
+                                group=self.rainbow)
+        response = c.post(url, dict(remove=self.yellow.id))
+        assert self.yellow in self.rainbow.user_set.all()
+        
+        
+        
+        # remove self
+        response = c.post(url, dict(remove=self.red.id))
+        self.assertRedirects(response, reverse('pay_bills.views.home'))
+        assert not self.red in self.rainbow.user_set.all()
+        
+
     def test_join_group_with_invite(self):
         """ Test that join group with invite code works"""
  

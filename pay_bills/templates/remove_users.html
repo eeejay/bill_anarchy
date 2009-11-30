@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h1>Remove from {{ group }}:</h1>
+
+<form method="POST" action="" >
+<table>
+{{ remove_form.as_table }}
+</table>
+<input type="submit" value="Remove"/>
+</form>
+
+{% endblock %}
