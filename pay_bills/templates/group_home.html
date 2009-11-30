@@ -2,9 +2,11 @@
 
 {% block content %}
 
-<a href="invite_users/">Invite people to this group!</a></li>
+<h1>Group {{ group.name }}</h1>
 
-<h1>Balance:</h1>
+<a href="invite_users/">Invite people to this group!</a>
+
+<h2>Balance:</h2>
 <table>
 {% for row in balance_table %}
 <tr class="{% cycle 'odd' 'even' %}">
