@@ -293,6 +293,9 @@ def login(request):
 
     return response
 
+def forgot_password(request):
+    return django.contrib.auth.views.forgot_password(request, template_name='forgot_password.html')
+
 
 class TransferForm(forms.Form):
     comment = forms.CharField(required=False)
