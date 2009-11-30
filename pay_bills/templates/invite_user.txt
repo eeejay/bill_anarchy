@@ -1,4 +1,4 @@
-You have been invited to split bills with {{ invite.group }} on Bill Anarchy (is Order).
+You have been invited to split {{ invite.group }} bills using Bill Anarchy (is Order).
 
 Follow this link to accept:
    http://{{ domain }}/invitation/{{ invite.code }}

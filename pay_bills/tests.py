@@ -151,7 +151,7 @@ class GroupTestCase(TestCase):
         self.assertEquals(response.status_code, 200)
         self.assertTemplateUsed(response, 'invite_users.html')
 
-        response = c.post(url, dict(email_list='red@example.com\nbrownish-green@example.com'))
+        response = c.post(url, dict(email_list='red@example.com\r\nbrownish-green@example.com'))
         self.assertEquals(len(mail.outbox), 2)
         self.assertRedirects(response, reverse('pay_bills.views.group_home', args=[self.rainbow]))
 

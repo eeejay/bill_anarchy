@@ -96,7 +96,7 @@ def invite_users(request, group, form_class=InviteForm, template_name='invite_us
             data_list.append([subject,
                               message,
                               settings.DEFAULT_FROM_EMAIL,
-                              [email]])
+                              [email.strip()]])
         send_mass_mail(data_list)
 
         # some sort of notification of this action
