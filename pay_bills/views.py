@@ -270,9 +270,8 @@ def create_account(request):
         form = form_class()
     return render_to_response('create_account.html', dict(form=form, code=code))
 
+import django.contrib.auth
 def login(request):
-    import django.contrib.auth
-    
     authentication_form = django.contrib.auth.forms.AuthenticationForm
     success_url = reverse('pay_bills.views.home')
 
@@ -292,9 +291,6 @@ def login(request):
             return HttpResponseRedirect(success_url)
 
     return response
-
-def forgot_password(request):
-    return django.contrib.auth.views.forgot_password(request, template_name='forgot_password.html')
 
 
 class TransferForm(forms.Form):

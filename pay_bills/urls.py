@@ -7,7 +7,6 @@ urlpatterns = patterns(
     (r'^accounts/create_account/$', 'create_account'),
     (r'^login/', 'login'),
     (r'^accounts/login/', 'login'),
-    (r'^accounts/forgot_password/', 'forgot_password'),
 
     (r'create_group/', 'create_group'),
     (r'([-\w]+)/remove_users/', 'remove_users'),

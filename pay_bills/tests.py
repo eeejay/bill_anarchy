@@ -9,7 +9,7 @@ import datetime
 from models import *
 
 def create_user(username, group):
-    u = User.objects.create_user(username, '', username)
+    u = User.objects.create_user(username, username + '@example.com', username)
     u.groups.add(group)
     return u
 
@@ -39,6 +39,7 @@ class UserTestCase(TestCase):
         response = c.get(url)
         self.assertEquals(response.status_code, 200)
         self.assertTemplateUsed(response, 'login.html')
+
         
     def test_home(self):
         """ Test that index page loads"""
