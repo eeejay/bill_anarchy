@@ -5,7 +5,7 @@ body {
   margin: 0;
   padding: 10px 10px 10px 10px;
   border: 0;    /* This removes the border around the viewport in old versions of IE */
-  background-image:url('baio_background.png');
+  background-image:url('baio_background.jpg');
 }
 
 div {
