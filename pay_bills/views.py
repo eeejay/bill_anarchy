@@ -9,6 +9,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate
 from django.contrib.auth import login as auth_login
 from django.utils.translation import ugettext_lazy as _, ugettext
+from django.contrib import messages
 
 from models import *
 
@@ -33,8 +34,7 @@ def group_home(request, group):
 class GroupForm(forms.Form):
     name = forms.SlugField(max_length=20,
                            label = _('Name'),
-                           help_text = _('a name consisting only of letters, numbers, underscores and hyphens.'),
-                           error_message = _('This value must contain only letters, numbers, underscores and hyphens.'))
+                           help_text = _('a name consisting only of letters, numbers, underscores and hyphens.'))
     
     def clean_name(self):
         if Group.objects.filter(name__iexact=self.cleaned_data['name']).count() > 0:
@@ -106,7 +106,7 @@ def invite_users(request, group, form_class=InviteForm, template_name='invite_us
                               [email]])
 
         send_mass_mail(data_list)
-        request.user.message_set.create(message='Sent %d invite(s)'%len(data_list))
+        messages.success(request, 'Sent %d invite(s)' % len(data_list))
 
         return HttpResponseRedirect(group.get_absolute_url())
     return render_to_response(template_name,
@@ -216,19 +216,19 @@ class SignupForm(forms.Form):
             if email == join_invitation.contact.email:
                 new_user = User.objects.create_user(username, email, password)
                 join_invitation.accept(new_user) # should go before creation of EmailAddress below
-                new_user.message_set.create(message=ugettext(u"Your email address has already been verified"))
+                messages.info(request, ugettext(u"Your email address has already been verified"))
                 # already verified so can just create
                 EmailAddress(user=new_user, email=email, verified=True, primary=True).save()
             else:
                 new_user = User.objects.create_user(username, "", password)
                 join_invitation.accept(new_user) # should go before creation of EmailAddress below
                 if email:
-                    new_user.message_set.create(message=ugettext(u"Confirmation email sent to %(email)s") % {'email': email})
+                    messages.info(request, ugettext(u"Confirmation email sent to %(email)s") % {'email': email})
                     EmailAddress.objects.add_email(new_user, email)
         else:
             new_user = User.objects.create_user(username, "", password)
             if email:
-                new_user.message_set.create(message=ugettext(u"Confirmation email sent to %(email)s") % {'email': email})
+                messages.info(request, ugettext(u"Confirmation email sent to %(email)s") % {'email': email})
                 EmailAddress.objects.add_email(new_user, email)
         
         if settings.ACCOUNT_EMAIL_VERIFICATION:
@@ -256,10 +256,7 @@ def create_account(request):
 
             user = authenticate(username=username, password=password)
             auth_login(request, user)
-            request.user.message_set.create(
-                message=_("Successfully logged in as %(username)s.") % {
-                    "username": user.username
-                    })
+            messages.info(request, _("Successfully logged in as %(username)s.") % {"username": user.username})
 
             if code:
                 invite.group.user_set.add(user)

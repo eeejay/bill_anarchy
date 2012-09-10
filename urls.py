@@ -6,7 +6,7 @@ admin.autodiscover()
 
 urlpatterns = patterns(
     '',
-    (r'^admin/(.*)', admin.site.root),
+    (r'^admin/(.*)', include(admin.site.urls)),
     
     (r'^accounts/logout/$', 'django.contrib.auth.views.logout',
      {'next_page': '/'}),
