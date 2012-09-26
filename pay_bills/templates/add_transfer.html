@@ -11,6 +11,7 @@
 {{ form.as_table }}
 </table>
 <input type="submit" value="Create"/>
+{% csrf_token %}
 </form>
 
 <script>$('id_{{form.comment.name}}').activate()</script>

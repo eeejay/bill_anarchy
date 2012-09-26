@@ -133,3 +133,17 @@ ul.errorlist
   padding-top: 10px;
   padding-bottom: 10px;
 }
+
+// Put a dashed border separator between login methods
+
+form.login { 
+  border-top: 2px dashed black;
+  padding-top: 10px;
+  margin-top: 10px;
+}
+
+form.login:first-of-type { 
+  border-top: none;
+  padding-top: 0;
+  margin-top: 0;
+}

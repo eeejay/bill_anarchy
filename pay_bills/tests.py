@@ -199,9 +199,14 @@ class GroupTestCase(TestCase):
 
         url = reverse('pay_bills.views.redeem_invite', args=[invite.code])
         response = c.get(url)
-        self.assertRedirects(response, reverse('pay_bills.views.create_account') + '?code=%s' % invite.code)
+        self.assertRedirects(response, reverse('pay_bills.views.login') + '?next=/invitation/%s' % invite.code)
 
-        url = reverse('pay_bills.views.create_account') + '?code=%s' % invite.code
+        url = reverse('pay_bills.views.login') + '?next=/invitation/%s' % invite.code
+        response = c.get(url)
+        self.assertEquals(response.status_code, 200)
+        self.assertTemplateUsed(response, 'login.html')
+
+        url = reverse('pay_bills.views.create_account') + '?next=/invitation/%s' % invite.code
         response = c.get(url)
         self.assertEquals(response.status_code, 200)
         self.assertTemplateUsed(response, 'create_account.html')
@@ -211,11 +216,17 @@ class GroupTestCase(TestCase):
                                     password1='pw1',
                                     password2='pw1',
                                     email='',
-                                    confirmation_key=''))
+                                    confirmation_key='',
+                                    next='/invitation/%s' % invite.code))
+        self.assertEquals(response.status_code, 302)
 
         self.assertEqual(User.objects.latest('id').username, 'chartruse')
-        assert User.objects.latest('id') in invite.group.user_set.all()
+        url = reverse('pay_bills.views.redeem_invite', args=[invite.code])
+        c.login(username='chartruse', password='pw1')
+        response = c.get(url)
         self.assertRedirects(response, reverse('pay_bills.views.group_home', args=[invite.group]))
+
+        assert User.objects.latest('id') in invite.group.user_set.all()
 
         # make sure that code works only once
         response = c.post(url, dict(username='chartruse2',

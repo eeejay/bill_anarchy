@@ -11,6 +11,8 @@ urlpatterns = patterns(
     '',
     (r'^admin/', include(admin.site.urls)),
 
+    (r'^browserid/', include('django_browserid.urls')),
+
     (r'^accounts/logout/$', 'django.contrib.auth.views.logout',
      {'next_page': '/'}),
     (r'^accounts/forgot_password/$', 'django.contrib.auth.views.password_reset',

@@ -9,6 +9,7 @@
 {{ remove_form.as_table }}
 </table>
 <input type="submit" value="Remove"/>
+{% csrf_token %}
 </form>
 
 {% endblock %}

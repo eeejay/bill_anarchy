@@ -7,7 +7,6 @@ license.
 To keep things light, we will use Sqlite for the database.
 
 
-
 INSTALLATION
 ============
 
@@ -24,6 +23,15 @@ Testing
 python manage.py test # run tests
 python manage.py runserver # run server locally
 
+Authentication
+--------------
+
+Two authentication backends are supported, model (user/pass) and
+Mozilla Persona. They could be used together, or one could be
+disabled. To disable conventional user/pass authentication, remove
+'django.contrib.auth.backends.ModelBackend' from
+AUTHENTICATION_BACKENDS, to remove Persona, remove all lines
+that mention "BrowserID" in settings.py.
 
 
 ----------

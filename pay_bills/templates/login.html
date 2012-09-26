@@ -6,7 +6,22 @@
 <p>Your username and password didn't match. Please try again.</p>
 {% endif %}
 
-<form method="post" action="">
+{% if browserid_form %}
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="https://browserid.org/include.js"></script>
+<a style="color: #fff" class="persona-button dark" id="browserid"
+   href="#"><span>Sign in with your Email</span></a>
+<form class="login" method="POST" action="{% url browserid_verify %}">
+  {% csrf_token %}
+  {{ browserid_form.as_p }}
+  <input type="hidden" name="next" value="{{ next }}" />
+</form>
+{{ browserid_form.media }}
+
+{% endif %}
+
+{% if modelbackend %}
+<form class="login" method="post" action="">
 <table>
 <tr>
     <td>{{ form.username.label_tag }}</td>
@@ -20,12 +35,15 @@
 
 <input type="submit" value="login" />
 <input type="hidden" name="next" value="{{ next }}" />
-</form>
+ </form>
 
 <script>$('id_{{form.username.name}}').activate()</script>
 
 <ul>
-<li><a href="/accounts/create_account/">Create Account</a></li>
+<li><a href="/accounts/create_account/?next={{ next }}">Create Account</a></li>
 <li><a href="/accounts/forgot_password/">Forgot password</a></li>
 </ul>
+
+{% endif %}
+
 {% endblock %}

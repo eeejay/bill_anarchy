@@ -10,14 +10,15 @@ from django.contrib.auth import authenticate
 from django.contrib.auth import login as auth_login
 from django.utils.translation import ugettext_lazy as _, ugettext
 from django.contrib import messages
+from django.template import RequestContext
 
 from models import *
-
 
 @login_required
 def home(request):
     groups = request.user.groups.all()
-    return render_to_response('home.html', {'groups': groups, 'current_user': request.user})
+    return render_to_response('home.html', {'groups': groups, 'current_user': request.user},
+                              context_instance=RequestContext(request))
 
 @login_required
 def group_home(request, group):
@@ -53,7 +54,8 @@ def create_group(request, form_class=GroupForm, template_name='create_group.html
     
     return render_to_response(template_name,
                               {'group_form': group_form,
-                               'current_user': request.user})
+                               'current_user': request.user},
+                               context_instance=RequestContext(request))
 
 class InviteForm(forms.Form):
     email_list = forms.CharField(
@@ -112,12 +114,17 @@ def invite_users(request, group, form_class=InviteForm, template_name='invite_us
     return render_to_response(template_name,
                               {'invite_form': invite_form,
                                'group': group,
-                               'current_user': request.user})
+                               'current_user': request.user},
+                               context_instance=RequestContext(request))
 
+@login_required
 def redeem_invite(request, code):
     invite = get_object_or_404(SignupCode, code=code)
-    return HttpResponseRedirect(reverse('pay_bills.views.create_account') + '?code=%s' % code)
-    
+    group = invite.group
+    group.user_set.add(request.user)
+    invite.delete()
+    return HttpResponseRedirect(group.get_absolute_url())
+
 class RemoveForm(forms.Form):
     def __init__(self, current_user, group, *args, **kwargs):
         super(RemoveForm, self).__init__(*args, **kwargs)
@@ -149,7 +156,9 @@ def remove_users(request, group, form_class=RemoveForm):
     else:
         form = form_class(request.user, group)
     return render_to_response('remove_users.html',
-                              {'group': group, 'remove_form': form})
+                              {'group': group, 'remove_form': form,
+                               'current_user': request.user},
+                               context_instance=RequestContext(request))
 
 
 alnum_re = re.compile(r'^\w+$')
@@ -178,6 +187,8 @@ class SignupForm(forms.Form):
         )
     
     confirmation_key = forms.CharField(max_length=40, required=False, widget=forms.HiddenInput())
+
+    next = forms.CharField(max_length=40, required=False, widget=forms.HiddenInput())
     
     def clean_username(self):
         if not alnum_re.search(self.cleaned_data["username"]):
@@ -236,18 +247,12 @@ class SignupForm(forms.Form):
             new_user.save()
                 
         return username, password # required for authenticate()
- 
 
 # adapted from pinax.apps.account.views
 def create_account(request):
     form_class = SignupForm
     success_url = reverse('pay_bills.views.home')
 
-    code = request.GET.get('code')
-    if code:
-        invite = get_object_or_404(SignupCode, code=code)
-        success_url = reverse('pay_bills.views.group_home', args=[invite.group.name])
-    
     if request.method == "POST":
         form = form_class(request.POST)
         if form.is_valid():
@@ -256,24 +261,28 @@ def create_account(request):
 
             user = authenticate(username=username, password=password)
             auth_login(request, user)
-            messages.info(request, _("Successfully logged in as %(username)s.") % {"username": user.username})
+            messages.info(
+                request, _(
+                    "Successfully logged in as %(username)s.") % \
+                    {"username": user.username})
 
-            if code:
-                invite.group.user_set.add(user)
-                invite.delete()
-               
-            return HttpResponseRedirect(success_url)
+            return HttpResponseRedirect(form.cleaned_data['next'] or success_url)
     else:
-        form = form_class()
-    return render_to_response('create_account.html', dict(form=form, code=code))
+        form = form_class(initial={'next': request.GET.get('next', '')})
+
+    return render_to_response('create_account.html',
+                              dict(form=form),
+                              context_instance=RequestContext(request))
+
 
 import django.contrib.auth
 def login(request):
     authentication_form = django.contrib.auth.forms.AuthenticationForm
     success_url = reverse('pay_bills.views.home')
 
-    response = django.contrib.auth.views.login(request, template_name='login.html')
-
+    response = django.contrib.auth.views.login(
+        request, template_name='login.html',
+        extra_context={'modelbackend': 'django.contrib.auth.backends.ModelBackend' in settings.AUTHENTICATION_BACKENDS})
     # redeem valid invite code for group membership, if possible
     code = request.GET.get('code')
     form = authentication_form(data=request.POST)
@@ -314,7 +323,7 @@ def add_transfer(request, group):
             # form contents 
             Transfer.objects.create(group=group, **form.cleaned_data)
             return HttpResponseRedirect(reverse('pay_bills.views.group_home', args=[group.name]))
-    return render_to_response('add_transfer.html', {'form': form, 'group': group, 'current_user': request.user})
+    return render_to_response('add_transfer.html', {'form': form, 'group': group, 'current_user': request.user}, context_instance=RequestContext(request))
 
 class BillForm(forms.Form):
     comment = forms.CharField(required=False)
@@ -367,7 +376,7 @@ def add_bill(request, group):
                                     amount=a)
                 
             return HttpResponseRedirect(reverse('pay_bills.views.group_home', args=[group.name]))
-    return render_to_response('add_bill.html', {'form': form, 'group': group, 'current_user': request.user})
+    return render_to_response('add_bill.html', {'form': form, 'group': group, 'current_user': request.user}, context_instance=RequestContext(request))
 
 @login_required
 def show_all_transactions(request, group, format='html'):

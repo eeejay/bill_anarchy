@@ -13,6 +13,7 @@
                     <input type="submit" value="create"/>
                 </div>
             </fieldset>
+          {% csrf_token %}
         </form>
 
 <script>$('id_{{ group_form.name.name }}').activate()</script>

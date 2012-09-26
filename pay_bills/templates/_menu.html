@@ -17,11 +17,10 @@
 
 {% if current_user %}
 Logged in as <a href="/">{{ current_user }}</a>
-(<a href="/accounts/logout/">logout</a>).
+(<a onclick="navigator.id.logout()" href="/accounts/logout/">logout</a>).
 <ul>
   <li><a href="/">All your groups</a></li>
   <li><a href="/create_group/">Create a new group</a></li>
-  <li><a href="/accounts/set_password/">Change your password</a></li>
 </ul>
 {% else %}
 <a href="/accounts/login/">login</a>
