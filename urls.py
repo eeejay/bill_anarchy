@@ -1,13 +1,16 @@
 from django.conf.urls.defaults import *
+import os
 
 # Uncomment the next two lines to enable the admin:
 from django.contrib import admin
 admin.autodiscover()
 
+public_dir = os.path.normpath(os.path.join(os.path.dirname(__file__), 'public'))
+
 urlpatterns = patterns(
     '',
-    (r'^admin/(.*)', include(admin.site.urls)),
-    
+    (r'^admin/', include(admin.site.urls)),
+
     (r'^accounts/logout/$', 'django.contrib.auth.views.logout',
      {'next_page': '/'}),
     (r'^accounts/forgot_password/$', 'django.contrib.auth.views.password_reset',
@@ -22,10 +25,10 @@ urlpatterns = patterns(
      {'template_name': 'password_change_form.html', 'post_change_redirect': '/'}),
                        
     (r'^public/$', 'django.views.static.serve',
-        {'document_root': 'public',
+        {'document_root': public_dir,
          'path': 'index.html'}),
     (r'^public/(?P<path>.*)$', 'django.views.static.serve',
-        {'document_root': 'public'}),
+        {'document_root': public_dir}),
 
     (r'^', include('bill_anarchy.pay_bills.urls')),
 
