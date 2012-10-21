@@ -11,6 +11,7 @@ from django.contrib.auth import login as auth_login
 from django.utils.translation import ugettext_lazy as _, ugettext
 from django.contrib import messages
 from django.template import RequestContext
+from django.core.mail import send_mass_mail, send_mail
 
 from models import *
 
@@ -75,7 +76,6 @@ def random_code(len=12):
     
 @login_required
 def invite_users(request, group, form_class=InviteForm, template_name='invite_users.html'):
-    from django.core.mail import send_mass_mail
     from django.contrib.sites.models import Site
 
     group = get_object_or_404(Group, name=group)
@@ -321,7 +321,19 @@ def add_transfer(request, group):
         if form.is_valid():
             # All validation rules pass, so create new data based on the
             # form contents 
-            Transfer.objects.create(group=group, **form.cleaned_data)
+            transfer = Transfer.objects.create(group=group, **form.cleaned_data)
+            payee = transfer.payee
+            if payee.email and payee.get_profile().receive_notifications:
+                message = render_to_string('transfer_reported.txt',
+                                           {'transfer': transfer})
+
+                send_mail(
+                    '%s reported a payment to you on Bill Anarchy' % \
+                        transfer.payer,
+                    message,
+                    settings.DEFAULT_FROM_EMAIL,
+                    [payee.email])
+
             return HttpResponseRedirect(reverse('pay_bills.views.group_home', args=[group.name]))
     return render_to_response('add_transfer.html', {'form': form, 'group': group, 'current_user': request.user}, context_instance=RequestContext(request))
 
@@ -369,11 +381,25 @@ def add_bill(request, group):
                                     comment=form.cleaned_data['comment'],
                                     group=group)
 
+            email_data = []
+
             for u in group.user_set.all():
                 a = form.cleaned_data['debtor_%d'%u.id]
                 Debt.objects.create(debtor=u,
                                     bill=b,
                                     amount=a)
+                if u.email and u.get_profile().receive_notifications:
+                    message = render_to_string('bill_reported.txt',
+                                               {'bill': b,
+                                                'total': b.total(),
+                                                'amount': a})
+                    email_data.append([
+                            '%s reported a bill on Bill Anarchy' % b.payer,
+                            message,
+                            settings.DEFAULT_FROM_EMAIL,
+                            [u.email]])
+
+            send_mass_mail(email_data)
                 
             return HttpResponseRedirect(reverse('pay_bills.views.group_home', args=[group.name]))
     return render_to_response('add_bill.html', {'form': form, 'group': group, 'current_user': request.user}, context_instance=RequestContext(request))

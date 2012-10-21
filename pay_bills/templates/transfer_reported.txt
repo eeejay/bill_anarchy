@@ -1,0 +1,5 @@
+Hello,
+
+{{ transfer.payer }} reported a payment of ${{ transfer.amount|floatformat:2 }} to you in {{ transfer.group }} ("{{ transfer.comment }}").
+
+Remember, Bill Anarchy is order.
