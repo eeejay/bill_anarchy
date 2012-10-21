@@ -517,3 +517,48 @@ def show_bill(request, id):
     return render_to_response('show_bill.html',
                               {'bill': bill, 'bill_fields': bill.__dict__.items(),
                                'group': group, 'current_user': request.user})
+
+class AccountSettings(forms.Form):
+    def __init__(self, user, *args, **kwargs):
+        super(AccountSettings, self).__init__(*args, **kwargs)
+        self.fields['first_name'] = forms.CharField(
+            label=_("First name"), max_length=30, widget=forms.TextInput(),
+            required=False, initial=user.first_name)
+        self.fields['last_name'] = forms.CharField(
+            label=_("Last name"), max_length=30, widget=forms.TextInput(),
+            required=False, initial=user.last_name)
+        self.fields['receive_notifications'] = forms.BooleanField(
+            required=False, initial=user.get_profile().receive_notifications)
+        if user.password != '!':
+            self.fields['password1'] = forms.CharField(
+                label=_("New password"),
+                widget=forms.PasswordInput(render_value=False), required=False)
+            self.fields['password2'] = forms.CharField(
+                label=_("New password (again)"),
+                widget=forms.PasswordInput(render_value=False), required=False)
+
+    def clean(self):
+        if "password1" in self.cleaned_data and "password2" in self.cleaned_data:
+            if self.cleaned_data["password1"] != self.cleaned_data["password2"]:
+                raise forms.ValidationError(_("You must type the same password each time."))
+        return self.cleaned_data
+
+@login_required
+def account_settings(request):
+    if request.method == 'GET': # no form data is associated with page, yet
+        form = AccountSettings(request.user)
+    elif request.method == 'POST': # If the form has been submitted...
+        form = AccountSettings(request.user, request.POST)
+        if form.is_valid():
+            request.user.first_name = form.cleaned_data['first_name']
+            request.user.last_name = form.cleaned_data['last_name']
+            p = request.user.get_profile()
+            p.receive_notifications = form.cleaned_data['receive_notifications']
+            if form.cleaned_data.get('password1', ''):
+                request.user.set_password(form.cleaned_data['password1'])
+            request.user.save()
+            p.save()
+
+    return render_to_response('account_settings.html',
+                              {'form': form, 'current_user': request.user},
+                              context_instance=RequestContext(request))
