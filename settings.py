@@ -142,6 +142,9 @@ EMAIL_PORT = 1025
 EMAIL_USE_TLS = False
 EMAIL_SUBJECT_PREFIX = '[Bill Anarchy (is Order)]'
 
+# override to use SMTP backend.
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
 # to see email output in development, run this in a console::
 #     python -m smtpd -n -c DebuggingServer localhost:1025
 
