@@ -1,5 +1,6 @@
 from django.db.models import *
 from django.contrib.auth.models import User, Group
+from django.db.models.signals import post_save
 from django.core.urlresolvers import reverse
 
 import datetime
@@ -165,3 +166,13 @@ class Debt(Model):
     def __unicode__(self):
         return 'Debt %d: %s owes $%.2f' % (self.id, self.debtor, self.amount)
 
+
+class UserProfile(Model):
+    user = OneToOneField(User)
+    receive_notifications = BooleanField(default=True)
+
+def create_user_profile(sender, instance, created, **kwargs):
+    if created:
+        UserProfile.objects.get_or_create(user=instance)
+
+post_save.connect(create_user_profile, sender=User)

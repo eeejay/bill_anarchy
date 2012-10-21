@@ -100,6 +100,8 @@ AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',
 )
 
+AUTH_PROFILE_MODULE = 'pay_bills.UserProfile'
+
 ROOT_URLCONF = 'bill_anarchy.urls'
 
 TEMPLATE_DIRS = (
