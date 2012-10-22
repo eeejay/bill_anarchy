@@ -1,5 +1,5 @@
 Hello,
 
-{{ bill.payer }} reported a bill of ${{ total|floatformat:2 }} in {{ bill.group }} ("{{ bill.comment }}"). Your part of the bill is ${{ amount|floatformat:2 }}.
+{{ bill.payer.get_display_name }} reported a bill of ${{ total|floatformat:2 }} in {{ bill.group }} ("{{ bill.comment }}"). Your part of the bill is ${{ amount|floatformat:2 }}.
 
 Remember, Bill Anarchy is order.

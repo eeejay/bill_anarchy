@@ -333,7 +333,7 @@ def add_transfer(request, group):
 
                 send_mail(
                     '%s reported a payment to you on Bill Anarchy' % \
-                        transfer.payer,
+                        transfer.payer.get_display_name(),
                     message,
                     settings.DEFAULT_FROM_EMAIL,
                     [payee.email])
@@ -398,7 +398,7 @@ def add_bill(request, group):
                                                 'total': b.total(),
                                                 'amount': a})
                     email_data.append([
-                            '%s reported a bill on Bill Anarchy' % b.payer,
+                            '%s reported a bill on Bill Anarchy' % b.payer.get_display_name(),
                             message,
                             settings.DEFAULT_FROM_EMAIL,
                             [u.email]])
