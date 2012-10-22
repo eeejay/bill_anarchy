@@ -27,7 +27,7 @@ def group_home(request, group):
     if not group in request.user.groups.all():
         return HttpResponseRedirect('/login/?next=%s' % request.path)
 
-    balance_table = [[u.username, '%.2f' % u.balance(group)] for u in group.user_set.all()]
+    balance_table = [[u.get_display_name(), '%.2f' % u.balance(group)] for u in group.user_set.all()]
     return render_to_response('group_home.html',
                               {'balance_table': balance_table,
                                'group': group, 'current_user': request.user})
@@ -125,12 +125,16 @@ def redeem_invite(request, code):
     invite.delete()
     return HttpResponseRedirect(group.get_absolute_url())
 
+class UserChoiceField(forms.ModelChoiceField):
+    def label_from_instance(self, user):
+        return user.get_display_name()
+
 class RemoveForm(forms.Form):
     def __init__(self, current_user, group, *args, **kwargs):
         super(RemoveForm, self).__init__(*args, **kwargs)
         self.group = group
-        self.fields['remove'] = forms.ModelChoiceField(queryset=group.user_set.all(),
-                                                      initial=current_user.id)
+        self.fields['remove'] = UserChoiceField(queryset=group.user_set.all(),
+                                                initial=current_user.id)
     def clean(self):
         from numpy import abs
         if abs(self.cleaned_data['remove'].balance(self.group)) >= .01:
@@ -304,9 +308,9 @@ class TransferForm(forms.Form):
     amount = forms.FloatField()
     def __init__(self, current_user, group, *args, **kwargs):
         super(TransferForm, self).__init__(*args, **kwargs)
-        self.fields['payer'] = forms.ModelChoiceField(queryset=group.user_set.all(),
-                                                      initial=current_user.id)
-        self.fields['payee'] = forms.ModelChoiceField(queryset=group.user_set.all())
+        self.fields['payer'] = UserChoiceField(queryset=group.user_set.all(),
+                                               initial=current_user.id)
+        self.fields['payee'] = UserChoiceField(queryset=group.user_set.all())
 
 @login_required
 def add_transfer(request, group):
@@ -347,8 +351,8 @@ class BillForm(forms.Form):
         # now we add each question individually
         self.debtors = group.user_set.all()
 
-        self.fields['payer'] = forms.ModelChoiceField(queryset=self.debtors,
-                                                      initial=current_user.id)
+        self.fields['payer'] = UserChoiceField(queryset=self.debtors,
+                                               initial=current_user.id)
 
         self.debtor_fields = []
         for d in self.debtors:

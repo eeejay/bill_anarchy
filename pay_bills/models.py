@@ -5,6 +5,11 @@ from django.core.urlresolvers import reverse
 
 import datetime
 
+# monkey patch display_name into User model
+def get_display_name(user):
+    return user.get_full_name() or user.username
+
+User.get_display_name = get_display_name
 
 # monkey patch balance method into User model
 def balance(user, group):
@@ -63,7 +68,9 @@ class Transfer(Model):
     is_void = BooleanField('is void?', default=False)
 
     def __unicode__(self):
-        name = 'Transfer: %s paid %s $%.2f' % (self.payer, self.payee, self.amount)
+        name = 'Transfer: %s paid %s $%.2f' % (self.payer.get_display_name(),
+                                               self.payee.get_display_name(),
+                                               self.amount)
         if self.comment:
             name += ' (%s)' % self.comment
         return name
@@ -101,7 +108,8 @@ class Bill(Model):
     is_void = BooleanField('is void?', default=False)
     
     def __unicode__(self):
-        name = 'Bill: %s paid $%.2f' % (self.payer, self.total())
+        name = 'Bill: %s paid $%.2f' % (self.payer.get_display_name(),
+                                        self.total())
         if self.comment:
             name += ' (%s)' % self.comment
         return name
@@ -164,7 +172,9 @@ class Debt(Model):
     amount = FloatField()
     
     def __unicode__(self):
-        return 'Debt %d: %s owes $%.2f' % (self.id, self.debtor, self.amount)
+        return 'Debt %d: %s owes $%.2f' % (self.id,
+                                           self.debtor.get_display_name(),
+                                           self.amount)
 
 
 class UserProfile(Model):
